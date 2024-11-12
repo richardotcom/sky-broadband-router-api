@@ -1,7 +1,13 @@
 import dotenv from "dotenv"
 import axios from "axios";
+import { CookieJar } from 'tough-cookie';
+import { wrapper } from 'axios-cookiejar-support';
 
 const base_url: string = "https://myrouter.io";
+
+// Retain cookies between requests
+const jar = new CookieJar();
+const client = wrapper(axios.create({ jar }));
 
 function main(): void {
     dotenv.config();
@@ -13,7 +19,7 @@ function main(): void {
     }
 
     // Authentication
-    axios.postForm(base_url + "/check.jst", {
+    client.postForm(base_url + "/check.jst", {
         username: "admin",
         password
     })
