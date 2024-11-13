@@ -2,6 +2,7 @@ import dotenv from "dotenv"
 import axios from "axios";
 import { CookieJar } from 'tough-cookie';
 import { wrapper } from 'axios-cookiejar-support';
+import * as cheerio from "cheerio";
 
 function main(): void {
     dotenv.config();
@@ -21,13 +22,22 @@ function main(): void {
     const client = wrapper(axiosInstance);
 
     // Authentication
-    client.postForm("/check.jst", {
+    client.postForm<string>("/check.jst", {
         username: "admin",
         password
     })
     .then(response => {
-        console.log(response.status);
-        console.log(response.data);
+        // Parse received HTML to assess success
+        const $ = cheerio.load(response.data);
+        const ssid_element = $("#wifissid");
+        if (!ssid_element.length)
+        {
+            console.error('Incorrect password');
+            return;
+        }
+
+        console.log("SSID:", $("#wifissid").next().text());
+        console.log("WiFi password:", $("#wifipass").next().text());
     })
     .catch(error => {
         console.error(error);
