@@ -32,7 +32,17 @@ function main(): void {
         const ssid_element = $("#wifissid");
         if (!ssid_element.length)
         {
-            console.error('Incorrect password');
+            // Extract error message from alert call embedded inside HTML script
+            const alert = response.data.match(/(?<=alert\().+(?=\);)/);
+            if (alert) {
+                const message = alert[0].matchAll(/\"(.*?)\"/g);
+                if (message) {
+                    console.error([...message].map(match => match[1]).join(""));
+                    return;
+                }
+            }
+            
+            console.error("Unknown error");
             return;
         }
 
