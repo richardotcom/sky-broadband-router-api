@@ -1,23 +1,9 @@
-import path from "path";
-import fs from "fs";
-import dotenv from "dotenv"
 import axios from "axios";
-import { CookieJar } from 'tough-cookie';
-import { wrapper } from 'axios-cookiejar-support';
+import { CookieJar } from "tough-cookie";
+import { wrapper } from "axios-cookiejar-support";
 import * as cheerio from "cheerio";
 
-try {
-    const envPath: string = path.resolve(__dirname, "../.env");
-    if (!fs.existsSync(envPath)) {
-        throw new Error("File " + envPath + " does not exist");
-    }
-
-    dotenv.config({ path: envPath });
-    const password: string = process.env.PASSWORD || String();
-    if (!password) {
-        throw new Error("Password not set inside .env file");
-    }
-
+export function Authenticate(password: string): void {
     // Retain cookies between requests
     const jar = new CookieJar();
     const axiosInstance = axios.create({
@@ -58,8 +44,5 @@ try {
         {
             console.log("WiFi password:", passwordElement.next().text());
         }
-    })
-}
-catch (error) {
-    console.error(error);
+    });
 }
