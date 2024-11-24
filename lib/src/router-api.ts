@@ -97,6 +97,7 @@ export class Router {
      * Allows configuration of wireless network.
      */
     private async editWirelessNetworkConfiguration() {
+        // Retrieve cross-site request forgery prevention token
         const cookies = await this.cookieJar.getCookies(Router.baseURL);
 
         let csrfpToken: string = String();
@@ -110,19 +111,27 @@ export class Router {
         if (!csrfpToken) {
             throw new Error("Authentication error, cookie with key csrfp_token missing");
         }
+
+        // URL-encoded configuration
+        const configInfo = encodeURIComponent(JSON.stringify({
+            "ssid_number": "1", // 1 | 2
+            "network_name": this.ssid,
+            "network_password": this.password,
+            "password_update": "false",
+            "security": "WPA3-Personal Transition",
+            "wireless_mode": "a,n,ac,ax",
+            "radio_enable": "true"
+        }));
         
+        // Request configuration update
         const response = await this.client.postForm("/actionHandler/ajaxSet_wireless_network_configuration_edit.jst", {
-            configInfo:
-            {
-                /*
-                "ssid_number": "1",
-                "network_name": this.ssid,
-                "network_password": this.password,
-                "password_update": "false",
-                "radio_enable": "true"
-                */
-            },
+            "configInfo": configInfo,
             "csrfp_token": csrfpToken
+        },
+        {
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            }
         });
     }
 }
