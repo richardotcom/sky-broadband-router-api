@@ -7,7 +7,11 @@ export class Router {
     // Singleton
     private static instance: Router;
 
+    // Static variables
+    private static baseURL: string = "https://myrouter.io";
+
     // HTTP client
+    private cookieJar = new CookieJar();
     private client: AxiosInstance;
 
     // Router details
@@ -16,10 +20,9 @@ export class Router {
 
     private constructor() {
         // Retain authentication cookies between requests
-        const jar = new CookieJar();
         const axiosInstance = axios.create({
-            baseURL: "https://myrouter.io",
-            jar
+            baseURL: Router.baseURL,
+            jar: this.cookieJar
         });
         this.client = wrapper(axiosInstance);
     }
@@ -88,5 +91,38 @@ export class Router {
      */
     public getWiFiPassword(): string {
         return this.password;
+    }
+
+    /**
+     * Allows configuration of wireless network.
+     */
+    private async editWirelessNetworkConfiguration() {
+        const cookies = await this.cookieJar.getCookies(Router.baseURL);
+
+        let csrfpToken: string = String();
+        cookies.forEach(cookie => {
+            if (cookie.key == "csrfp_token") {
+                csrfpToken = cookie.value;
+                return;
+            }
+        });
+
+        if (!csrfpToken) {
+            throw new Error("Authentication error, cookie with key csrfp_token missing");
+        }
+        
+        const response = await this.client.postForm("/actionHandler/ajaxSet_wireless_network_configuration_edit.jst", {
+            configInfo:
+            {
+                /*
+                "ssid_number": "1",
+                "network_name": this.ssid,
+                "network_password": this.password,
+                "password_update": "false",
+                "radio_enable": "true"
+                */
+            },
+            "csrfp_token": csrfpToken
+        });
     }
 }
