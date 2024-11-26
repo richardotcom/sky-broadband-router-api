@@ -94,9 +94,9 @@ export class Router {
     }
 
     /**
-     * Allows configuration of wireless network.
+     * Turn on or off wireless connectivity.
      */
-    private async editWirelessNetworkConfiguration() {
+    private async toggleWiFi() {
         // Retrieve cross-site request forgery prevention token
         const cookies = await this.cookieJar.getCookies(Router.baseURL);
 
@@ -115,12 +115,7 @@ export class Router {
         // URL-encoded configuration
         const configInfo = encodeURIComponent(JSON.stringify({
             "ssid_number": "1", // 1 | 2
-            "network_name": this.ssid,
-            "network_password": this.password,
-            "password_update": "false",
-            "security": "WPA3-Personal Transition",
-            "wireless_mode": "a,n,ac,ax",
-            "radio_enable": "true"
+            "radio_enable": "false"
         }));
         
         // Request configuration update
