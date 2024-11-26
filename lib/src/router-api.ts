@@ -3,6 +3,11 @@ import { CookieJar } from "tough-cookie";
 import { wrapper } from "axios-cookiejar-support";
 import * as cheerio from "cheerio";
 
+export enum FrequencyBand {
+    TWO_POINT_FIVE_GHZ = 1,
+    FIVE_GHZ = 2
+}
+
 export class Router {
     // Singleton
     private static instance: Router;
@@ -95,8 +100,10 @@ export class Router {
 
     /**
      * Turn on or off wireless connectivity.
+     * @param band Enum corresponding to selected frequency band.
+     * @param enable Turn on or off wireless connectivity for specified band.
      */
-    private async toggleWiFi() {
+    private async toggleWiFi(band: FrequencyBand, enable: boolean) {
         // Retrieve cross-site request forgery prevention token
         const cookies = await this.cookieJar.getCookies(Router.baseURL);
 
@@ -114,8 +121,8 @@ export class Router {
 
         // URL-encoded configuration
         const configInfo = encodeURIComponent(JSON.stringify({
-            "ssid_number": "1", // 1 | 2
-            "radio_enable": "false"
+            "ssid_number": band,
+            "radio_enable": enable.toString()
         }));
         
         // Request configuration update
