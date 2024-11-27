@@ -100,20 +100,25 @@ export class Router {
 
     /**
      * Turn on or off wireless connectivity.
+     * 
      * @param band Enum corresponding to selected frequency band.
      * @param enable Turn on or off wireless connectivity for specified band.
+     * 
+     * @returns {boolean}
+     * True if the band was turned on or off as desired.
      */
-    private async toggleWiFi(band: FrequencyBand, enable: boolean) {
+    private async toggleWiFi(band: FrequencyBand, enable: boolean): Promise<boolean> {
         // Retrieve cross-site request forgery prevention token
         const cookies = await this.cookieJar.getCookies(Router.baseURL);
 
         let csrfpToken: string = String();
-        cookies.forEach(cookie => {
-            if (cookie.key == "csrfp_token") {
-                csrfpToken = cookie.value;
-                return;
+        // Likely to be the last cookie in the list.
+        for (let i = cookies.length - 1; i >= 0; i--) {
+            if (cookies[i].key == "csrfp_token") {
+                csrfpToken = cookies[i].value;
+                break;
             }
-        });
+        }
 
         if (!csrfpToken) {
             throw new Error("Authentication error, cookie with key csrfp_token missing");
@@ -128,12 +133,18 @@ export class Router {
         // Request configuration update
         const response = await this.client.postForm("/actionHandler/ajaxSet_wireless_network_configuration_edit.jst", {
             "configInfo": configInfo,
-            "csrfp_token": csrfpToken
+            "csrfp_token": csrfpToken // Needs to be included as body parameter for some reason.
         },
         {
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded"
             }
         });
+
+        // TODO: Implement better validation, because "success" does not necessarily mean that changes were applied.
+        if (response.data == "success") {
+            return true;
+        }
+        return false;
     }
 }
