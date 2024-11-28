@@ -3,7 +3,7 @@ import { CookieJar } from "tough-cookie";
 import { wrapper } from "axios-cookiejar-support";
 import * as cheerio from "cheerio";
 
-export enum FrequencyBand {
+enum FrequencyBand {
     TWO_POINT_FIVE_GHZ = 1,
     FIVE_GHZ = 2
 }
@@ -146,5 +146,31 @@ export class Router {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Turn on or off wireless connectivity.
+     * 
+     * @param enable Set to true to turn on, false otherwise.
+     * 
+     * @remarks
+     * Errors need to be handled by the user.
+     */
+    public async toggleWifi(enable: boolean) {
+        const [two_point_five_ghz, five_ghz] = await Promise.all([
+            this.toggleWiFi(FrequencyBand.TWO_POINT_FIVE_GHZ, enable),
+            this.toggleWiFi(FrequencyBand.FIVE_GHZ, enable)
+        ]);
+
+        if (!two_point_five_ghz && !five_ghz) {
+            throw new Error("Failed to turn " + enable ? "on" : "off" + " WiFi.");
+        }
+        // TODO: Consider recovery options when one band fails to switch.
+        else if (!two_point_five_ghz) {
+            throw new Error("Issue with 2.4GHz band.");
+        }
+        else if (!five_ghz) {
+            throw new Error("Issue with 5GHz band.");
+        }
     }
 }
