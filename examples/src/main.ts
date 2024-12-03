@@ -1,6 +1,7 @@
 import path from "path";
 import fs from "fs";
 import dotenv from "dotenv"
+import timersPromises from 'node:timers/promises'
 import { Router } from "../../lib/src/router-api";
 
 function main() {
@@ -17,8 +18,20 @@ function main() {
 
     Router.getInstance(password)
     .then(router => {
-        console.log("SSID:", router.getSSID());
-        console.log("WiFi password:", router.getWiFiPassword());
+        while (true) {
+            const now = new Date();
+            const midnight = new Date(now);
+            midnight.setHours(24, 0, 0, 0);
+            const timeUntilMidnight = midnight.getTime() - now.getTime();
+
+            // Turn off at midnight.
+            timersPromises.setTimeout(timeUntilMidnight);
+            router.toggleWifi(false);
+
+            // Turn back on at 6am.
+            timersPromises.setTimeout(21600000);
+            router.toggleWifi(true);
+        }
     })
     .catch(error => {
         if (error instanceof Error) {
