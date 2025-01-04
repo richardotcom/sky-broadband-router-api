@@ -7,6 +7,14 @@ function sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function calculateTimeUntil(hours: number): number {
+    const now = new Date();
+    const futureTime = new Date(now);
+    // If the hour has passed, it will shift to the following day.
+    futureTime.setHours(now.getHours() < hours ? hours : hours + 24, 0, 0, 0);
+    return futureTime.getTime() - now.getTime();
+}
+
 function main() {
     const envPath: string = path.resolve(__dirname, "../../.env");
     if (!fs.existsSync(envPath)) {
@@ -22,17 +30,12 @@ function main() {
     Router.getInstance(password)
     .then(async router => {
         while (true) {
-            const now = new Date();
-            const midnight = new Date(now);
-            midnight.setHours(24, 0, 0, 0);
-            const timeUntilMidnight = midnight.getTime() - now.getTime();
-
             // Turn off at midnight.
-            await sleep(timeUntilMidnight);
+            await sleep(calculateTimeUntil(24));
             router.toggleWifi(false);
 
             // Turn back on at 6am.
-            await sleep(21600000);
+            await sleep(calculateTimeUntil(6));
             router.toggleWifi(true);
         }
     })
