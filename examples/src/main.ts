@@ -3,8 +3,16 @@ import fs from "fs";
 import dotenv from "dotenv"
 import { Router } from "../../lib/src/router-api";
 
-function sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+function sleep(milliseconds: number, signal?: AbortSignal): Promise<void> {
+    return new Promise((resolve, reject) => {
+        const timeout = setTimeout(resolve, milliseconds);
+        
+        // Listen for abort signal
+        signal?.addEventListener("abort", () => {
+            clearTimeout(timeout);
+            reject(new Error(signal.reason));
+        });
+    });
 }
 
 function calculateTimeUntil(hours: number): number {
@@ -29,14 +37,22 @@ function main() {
 
     Router.getInstance(password)
     .then(async router => {
-        while (true) {
-            // Turn off at midnight.
-            await sleep(calculateTimeUntil(24));
+        const controller = new AbortController();
+        // Handles Ctrl+C press
+        process.on('SIGINT', () => {
+            controller.abort("Keyboard interrupt detected");
+        });
+
+        while (!controller.signal.aborted) {
+            // Turn off at midnight
+            await sleep(calculateTimeUntil(24), controller.signal);
             router.toggleWifi(false);
 
-            // Turn back on at 6am.
-            await sleep(calculateTimeUntil(6));
-            router.toggleWifi(true);
+            // Turn back on at 6am or if the process gets interrupted
+            await sleep(calculateTimeUntil(6), controller.signal)
+            .finally(() => {
+                router.toggleWifi(true);
+            });
         }
     })
     .catch(error => {
