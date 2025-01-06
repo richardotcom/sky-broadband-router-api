@@ -3,15 +3,24 @@ import fs from "fs";
 import dotenv from "dotenv"
 import { Router } from "../../lib/src/router-api";
 
-function sleep(milliseconds: number, signal?: AbortSignal): Promise<void> {
+function sleep(milliseconds: number, signal: AbortSignal): Promise<void> {
     return new Promise((resolve, reject) => {
         const timeout = setTimeout(resolve, milliseconds);
+
+        const abort = (message: string) => {
+            clearTimeout(timeout);
+            reject(new Error(message));
+        }
         
         // Listen for abort signal
-        signal?.addEventListener("abort", () => {
-            clearTimeout(timeout);
-            reject(new Error(signal.reason));
+        signal.addEventListener("abort", () => {
+            abort(signal.reason);
         });
+
+        // Just in case the signal gets aborted before the event listener is added
+        if (signal.aborted) {
+            abort(signal.reason);
+        }
     });
 }
 
