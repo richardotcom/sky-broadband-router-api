@@ -99,6 +99,32 @@ export class Router {
     }
 
     /**
+     * Retrieves the status of wireless connectivity.
+     * 
+     * @returns
+     * A tuple of booleans corresponding to each band's status.
+     *
+     * @remarks
+     * May throw an error.
+     */
+    private async getStatus(): Promise<[boolean, boolean]> {
+        const response = await this.client.get("/connection_status.jst");
+
+        // Parse received HTML
+        const $ = cheerio.load(response.data);
+
+        // Extract status from HTML
+        const wifiSection = $("div[class=\"connection_wifi wifi_section\"]");
+        if (!wifiSection.length)
+        {
+            throw new Error("Unknown error");
+        }
+
+        return [wifiSection.children().eq(0).find("#act").text() == "Active",
+                wifiSection.children().eq(1).find("#act").text() == "Active"];
+    }
+
+    /**
      * Turn on or off wireless connectivity.
      * 
      * @param band Enum corresponding to selected frequency band.
