@@ -167,11 +167,16 @@ export class Router {
             }
         });
 
-        // TODO: Implement better validation, because "success" does not necessarily mean that changes were applied.
-        if (response.data == "success") {
-            return true;
+        try {
+            const status = await this.getStatus();
+            const bandStatus = status[band == FrequencyBand.TWO_POINT_FIVE_GHZ ? 0 : 1];
+            return bandStatus == enable;
+        } catch {
+            if (response.data == "success") {
+                return true;
+            }
+            return false;
         }
-        return false;
     }
 
     /**
