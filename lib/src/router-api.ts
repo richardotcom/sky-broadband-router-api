@@ -101,13 +101,15 @@ export class Router {
     /**
      * Retrieves the status of wireless connectivity.
      * 
+     * @param band Enum corresponding to selected frequency band.
+     * 
      * @returns
      * A tuple of booleans corresponding to each band's status.
      *
      * @remarks
      * May throw an error.
      */
-    private async getStatus(): Promise<[boolean, boolean]> {
+    private async getStatus(band: FrequencyBand): Promise<boolean> {
         const response = await this.client.get("/connection_status.jst");
 
         // Parse received HTML
@@ -117,11 +119,22 @@ export class Router {
         const wifiSection = $("div[class=\"connection_wifi wifi_section\"]");
         if (!wifiSection.length)
         {
-            throw new Error("Unknown error");
+            throw new Error("Error requesting connection status");
         }
 
-        return [wifiSection.children().eq(0).find("#act").text() == "Active",
-                wifiSection.children().eq(1).find("#act").text() == "Active"];
+        const individualBands = wifiSection.children();
+        if (individualBands.length < 2)
+        {
+            throw new Error("List of wireless connections not available");
+        }
+
+        const status = individualBands.eq(band == FrequencyBand.TWO_POINT_FIVE_GHZ? 0 : 1).find("#act");
+        if (!status.length)
+        {
+            throw new Error("Status not available");
+        }
+
+        return status.text() == "Active";
     }
 
     /**
@@ -167,11 +180,12 @@ export class Router {
             }
         });
 
+        // Validation
         try {
-            const status = await this.getStatus();
-            const bandStatus = status[band == FrequencyBand.TWO_POINT_FIVE_GHZ ? 0 : 1];
-            return bandStatus == enable;
+            const status = await this.getStatus(band);
+            return status == enable;
         } catch {
+            // Fallback mechanism
             if (response.data == "success") {
                 return true;
             }
