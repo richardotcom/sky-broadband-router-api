@@ -8,6 +8,8 @@ enum FrequencyBand {
     FIVE_GHZ = 2
 }
 
+const FrequencyBands = Object.keys(FrequencyBand).filter(key => !isNaN(Number(key))).length;
+
 export class Router {
     // Singleton
     private static instance: Router;
@@ -123,7 +125,7 @@ export class Router {
         }
 
         const individualBands = wifiSection.children();
-        if (individualBands.length < 2)
+        if (individualBands.length != FrequencyBands)
         {
             throw new Error("List of wireless connections not available");
         }
