@@ -128,13 +128,7 @@ export class Router {
             throw new Error("List of wireless connections not available");
         }
 
-        const status = individualBands.eq(band == FrequencyBand.TWO_POINT_FIVE_GHZ? 0 : 1).find("#act");
-        if (!status.length)
-        {
-            throw new Error("Status not available");
-        }
-
-        return status.text() == "Active";
+        return individualBands.eq(band - 1).find("#act").length != 0;
     }
 
     /**
