@@ -202,14 +202,15 @@ export class Router {
         const five_ghz = await this.toggleWiFi(FrequencyBand.FIVE_GHZ, enable);
 
         if (!two_point_four_ghz && !five_ghz) {
-            throw new Error("Failed to turn " + enable ? "on" : "off" + " WiFi.");
+            throw new Error("Failed to turn " + (enable ? "on" : "off") + " WiFi.");
         }
-        // TODO: Consider recovery options when one band fails to switch.
-        else if (!two_point_four_ghz) {
-            throw new Error("Issue with 2.4GHz band.");
-        }
-        else if (!five_ghz) {
-            throw new Error("Issue with 5GHz band.");
+        else if (!two_point_four_ghz || !five_ghz) {
+            // If the request was to disable (turn off) WiFi, turn the "working" band back on.
+            if (!enable) {
+                await this.toggleWiFi(five_ghz ? FrequencyBand.FIVE_GHZ : FrequencyBand.TWO_POINT_FOUR_GHZ, true);
+            }
+
+            throw new Error("Issue turning " + (five_ghz ? "2.4GHz" : "5GHz") + " band " + (enable ? "on" : "off") + ".");
         }
     }
 }
