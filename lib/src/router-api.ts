@@ -198,10 +198,8 @@ export class Router {
      * Errors need to be handled by the user.
      */
     public async toggleWifi(enable: boolean) {
-        const [two_point_four_ghz, five_ghz] = await Promise.all([
-            this.toggleWiFi(FrequencyBand.TWO_POINT_FOUR_GHZ, enable),
-            this.toggleWiFi(FrequencyBand.FIVE_GHZ, enable)
-        ]);
+        const two_point_four_ghz = await this.toggleWiFi(FrequencyBand.TWO_POINT_FOUR_GHZ, enable);
+        const five_ghz = await this.toggleWiFi(FrequencyBand.FIVE_GHZ, enable);
 
         if (!two_point_four_ghz && !five_ghz) {
             throw new Error("Failed to turn " + enable ? "on" : "off" + " WiFi.");
